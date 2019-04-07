@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <title>Extracting dependencies</title>
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" type="text/css" href="/../assets/built/screen.css">
+
+    <link rel="shortcut icon" href="/../favicon.ico" type="image/x-icon">
+    <link rel="canonical" href="https://matthewcheok.github.io/unidirectional-2/">
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    <link rel="amphtml" href="https://matthewcheok.github.io/unidirectional-2/amp/">
+    
+    <meta property="og:site_name" content="Blog">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Extracting dependencies">
+    <meta property="og:description" content="In this part, we&#x27;ll look at how to extract isolated pieces of logic into standalone types and create robust, configurable pieces of software.">
+    <meta property="og:url" content="https://matthewcheok.github.io/unidirectional-2/">
+    <meta property="og:image" content="https://images.unsplash.com/photo-1485809052957-5113b0ff51af?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1080&fit=max&ixid=eyJhcHBfaWQiOjExNzczfQ">
+    <meta property="article:published_time" content="2019-04-04T06:53:31.000Z">
+    <meta property="article:modified_time" content="2019-04-05T06:48:43.000Z">
+    <meta property="article:tag" content="unidirectional">
+    
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Extracting dependencies">
+    <meta name="twitter:description" content="In this part, we&#x27;ll look at how to extract isolated pieces of logic into standalone types and create robust, configurable pieces of software.">
+    <meta name="twitter:url" content="https://matthewcheok.github.io/unidirectional-2/">
+    <meta name="twitter:image" content="https://images.unsplash.com/photo-1485809052957-5113b0ff51af?ixlib&#x3D;rb-1.2.1&amp;q&#x3D;80&amp;fm&#x3D;jpg&amp;crop&#x3D;entropy&amp;cs&#x3D;tinysrgb&amp;w&#x3D;1080&amp;fit&#x3D;max&amp;ixid&#x3D;eyJhcHBfaWQiOjExNzczfQ">
+    <meta name="twitter:label1" content="Written by">
+    <meta name="twitter:data1" content="Matthew Cheok">
+    <meta name="twitter:label2" content="Filed under">
+    <meta name="twitter:data2" content="unidirectional">
+    <meta name="twitter:creator" content="@matthewcheok">
+    <meta property="og:image:width" content="1080">
+    <meta property="og:image:height" content="853">
+    
+    <script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "publisher": {
+        "@type": "Organization",
+        "name": "Blog",
+        "logo": {
+            "@type": "ImageObject",
+            "url": "https://matthewcheok.github.io/favicon.ico",
+            "width": 60,
+            "height": 60
+        }
+    },
+    "author": {
+        "@type": "Person",
+        "name": "Matthew Cheok",
+        "image": {
+            "@type": "ImageObject",
+            "url": "https://matthewcheok.github.io/content/images/2019/04/46125877_10158067559242907_4450943487235325952_n.jpg",
+            "width": 960,
+            "height": 960
+        },
+        "url": "https://matthewcheok.github.io/author/matthew/",
+        "sameAs": [
+            "https://twitter.com/matthewcheok"
+        ]
+    },
+    "headline": "Extracting dependencies",
+    "url": "https://matthewcheok.github.io/unidirectional-2/",
+    "datePublished": "2019-04-04T06:53:31.000Z",
+    "dateModified": "2019-04-05T06:48:43.000Z",
+    "image": {
+        "@type": "ImageObject",
+        "url": "https://images.unsplash.com/photo-1485809052957-5113b0ff51af?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1080&fit=max&ixid=eyJhcHBfaWQiOjExNzczfQ",
+        "width": 1080,
+        "height": 853
+    },
+    "keywords": "unidirectional",
+    "description": "In this part, we&#x27;ll look at how to extract isolated pieces of logic into standalone types and create robust, configurable pieces of software.",
+    "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": "https://matthewcheok.github.io/"
+    }
+}
+    </script>
+
+    <meta name="generator" content="Ghost 2.19">
+    <link rel="alternate" type="application/rss+xml" title="Blog" href="https://matthewcheok.github.io/rss/">
+    <link href="//cdnjs.cloudflare.com/ajax/libs/prism/1.13.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="/https://www.googletagmanager.com/gtag/js?id=UA-137782159-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-137782159-1');
+</script>
+
+</head>
+<body class="post-template tag-unidirectional">
+
+    <div class="site-wrapper">
+
+        
+
+<header class="site-header outer">
+    <div class="inner">
+        <nav class="site-nav">
+    <div class="site-nav-left">
+                <a class="site-nav-logo" href="/../">Blog</a>
+            <ul class="nav" role="menu">
+    <li class="nav-home" role="menuitem"><a href="https://matthewcheok.github.io">Home</a></li>
+    <li class="nav-github" role="menuitem"><a href="https://www.github.com/matthewcheok">Github</a></li>
+    <li class="nav-twitter" role="menuitem"><a href="https://twitter.com/matthewcheok">Twitter</a></li>
+</ul>
+
+    </div>
+    <div class="site-nav-right">
+        <div class="social-links">
+        </div>
+            <a class="rss-button" href="https://feedly.com/i/subscription/feed/https://matthewcheok.github.io/rss/" title="RSS" target="_blank" rel="noopener"><svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24"><circle cx="6.18" cy="17.82" r="2.18"/><path d="M4 4.44v2.83c7.03 0 12.73 5.7 12.73 12.73h2.83c0-8.59-6.97-15.56-15.56-15.56zm0 5.66v2.83c3.9 0 7.07 3.17 7.07 7.07h2.83c0-5.47-4.43-9.9-9.9-9.9z"/></svg>
+</a>
+    </div>
+</nav>
+    </div>
+</header>
+
+
+<main id="site-main" class="site-main outer">
+    <div class="inner">
+
+        <article class="post-full post tag-unidirectional ">
+
+            <header class="post-full-header">
+                <section class="post-full-meta">
+                    <time class="post-full-meta-date" datetime="2019-04-03">3 April 2019</time>
+                        <span class="date-divider">/</span> <a href="/../tag/unidirectional/">unidirectional</a>
+                </section>
+                <h1 class="post-full-title">Extracting dependencies</h1>
+            </header>
+
+            <figure class="post-full-image">
+                <img srcset="https://images.unsplash.com/photo-1485809052957-5113b0ff51af?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1080&fit=max&ixid=eyJhcHBfaWQiOjExNzczfQ 300w, https://images.unsplash.com/photo-1485809052957-5113b0ff51af?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1080&fit=max&ixid=eyJhcHBfaWQiOjExNzczfQ 600w, https://images.unsplash.com/photo-1485809052957-5113b0ff51af?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1080&fit=max&ixid=eyJhcHBfaWQiOjExNzczfQ 1000w, https://images.unsplash.com/photo-1485809052957-5113b0ff51af?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1080&fit=max&ixid=eyJhcHBfaWQiOjExNzczfQ 2000w" sizes="(max-width: 800px) 400px,
+                            (max-width: 1170px) 700px,
+                            1400px" src="/https://images.unsplash.com/photo-1485809052957-5113b0ff51af?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1080&fit=max&ixid=eyJhcHBfaWQiOjExNzczfQ" alt="Extracting dependencies">
+            </figure>
+
+            <section class="post-full-content">
+                <div class="post-content">
+                    <p></p><p>If you look at our project this is the structure we currently have:</p><!--kg-card-begin: markdown--><ul>
+<li><code>AppDelegate.swift</code></li>
+<li><code>Models.swift</code></li>
+<li><code>List</code>
+<ul>
+<li><code>ListViewController.swift</code></li>
+</ul>
+</li>
+<li><code>Detail</code>
+<ul>
+<li><code>DetailViewController.swift</code></li>
+</ul>
+</li>
+</ul>
+<!--kg-card-end: markdown--><p>Most of the work happens in <code>ListViewController</code> so it's worth taking a closer look. Admirably, we've tried to structure around two private methods <code>setupViews()</code> and <code>loadData()</code> and organized protocol conformances via extensions.</p><h3 id="this-looks-pretty-good-what-next">This looks pretty good. What next?</h3><p>Let's take a step back and ask ourselves what do we think should be the responsibility of the view controller? Clearly it's doing a bunch of things:</p><ol><li>It's holding state </li><li>It's creating views</li><li>It's configuring views</li><li>It's laying them out</li><li>It's fetching data from the network</li><li>It's parsing the data</li><li>It's rendering data</li><li>It's handling user interactions</li><li>It's creating sub-flows (the next view controller)</li><li>It's presenting sub-flows</li></ol><p>That's quite a list, and some of them, rightly so. In terms of convention, Apple has indeed been pushing developers to use <code>UIViewController</code> like the view layer in the <a href="https://developer.apple.com/library/archive/documentation/General/Conceptual/DevPedia-CocoaCore/MVC.html">Model-View-Controller</a> model. It has a lot of affordances for containment and presentation and Autolayout and adaptive layout (using size classes) and much more.</p><p>Any attempt to repurpose <code>UIViewController</code> would be an exercise in futility and end up in many fights against the <code>UIKit</code> framework. So let's not go there.</p><h3 id="what-does-data-fetching-have-to-do-with-ui-rendering">What does data fetching have to do with UI rendering?</h3><p>Nothing! So this looks like a good candidate to start our refactor. One of the more famously espoused axioms of computer science is the <a href="https://blog.cleancoder.com/uncle-bob/2014/05/08/SingleReponsibilityPrinciple.html">Single Responsibility Principle.</a></p><p>Generally speaking, if we ensure most types (the principle refers to classes but Swift has more in its toolbox) in our codebase have a single responsibility, it makes it clearer what the purpose of the type is (what it should do) and allows us to compartmentalize when reasoning about it (which is basically how humans deal with complexity.)</p><p>Let's pull out the networking code into a new type. Now we need to decide where to draw the line. Should this type perform network requests? Should it also parse the data? Should it handle results and failures? </p><p>If we take SRP to the extreme, we could end up with a ton of different types and we'd have to connect them all in a pipeline that makes it hard to understand at a glance. For now, we'll opt for something sensible and create an <code>APIAdapter</code> that knows how to communicate with the endpoint and interpret the resulting response. We're also naming this type with intent, and not calling it something like <code>DataManager</code> (which could imply possibly caching data or pre-fetching.) </p><h3 id="extracting-logic">Extracting logic</h3><p>Now that we've determined its purpose, we have another question. What type should we use? Should we use a class? A struct? An enum? We'll answer this in more detail in another post but for now, we'll go with a class. Here's our interface:</p><!--kg-card-begin: markdown--><pre><code class="language-swift">final class APIAdapter {
+  func fetchJobPositions(completion: @escaping ([JobPosition]) -&gt; Void)
+}
+</code></pre>
+<!--kg-card-end: markdown--><p></p><p>This seems like a valid first attempt, but let's take a closer look. We've said the responsibility of this class should end with interpreting the response. This means we could parse the JSON data in this class but we shouldn't handle success or failure and defer that to the view layer. Thankfully, Swift has a built-in type which lets us do just that.</p><!--kg-card-begin: markdown--><pre><code class="language-swift">final class APIAdapter {
+  func fetchJobPositions(completion: @escaping (Result&lt;[JobPosition], Error&gt;) -&gt; Void)
+}
+</code></pre>
+<!--kg-card-end: markdown--><p></p><p>The <code>Result</code> type is an enum with two cases <code>.success</code> and <code>.failure</code> and very succinctly communicates that the result can be only one of them. With this interface, we are ready to proceed. Let's add the rest of the implementation:</p><!--kg-card-begin: markdown--><pre><code class="language-swift">func fetchJobPositions(completion: @escaping (Result&lt;[JobPosition], Error&gt;) -&gt; Void)
+{
+  guard let url = URL(string: &quot;https://jobs.github.com/positions.json?description=python&amp;location=san+francisco&quot;) else {
+    return
+  }
+
+  URLSession.shared.dataTask(with: url) { (data, response, error) in
+    if let error = error {
+      DispatchQueue.main.async {
+        completion(.failure(error))
+      }
+    }
+
+    guard let data = data else { fatalError(&quot;There's no error but also no data&quot;) }
+
+    let decoder = JSONDecoder()
+    do {
+      let items = try decoder.decode([JobPosition].self, from: data)
+      DispatchQueue.main.async {
+        completion(.success(items))
+      }
+    } catch {
+      DispatchQueue.main.async {
+        completion(.failure(error))
+      }
+    }
+  }.resume()
+}
+</code></pre>
+<!--kg-card-end: markdown--><p></p><p>Now we can accurately indicate where errors have occurred:</p><ol><li>When the network response fails</li><li>When the data parsing fails</li></ol><p>In which case, we hop back onto the main queue (because <code>URLSessionDataTask</code> defaults to a background queue) and relay the results via a completion handler.</p><p>Let's update the call-site back in <code>ListViewController</code>:</p><!--kg-card-begin: markdown--><pre><code class="language-swift">private let apiAdapter = APIAdapter()
+
+private func loadData() {
+  apiAdapter.fetchJobPositions { (result) in
+    switch result {
+    case .success(let items):
+      self.items = items
+      self.tableView.reloadData()
+
+    case .failure(let error):
+      print(error)
+    }
+  }
+}
+</code></pre>
+<!--kg-card-end: markdown--><p></p><p>This is looking a lot better and we have much less of the extremely niche networking logic in our view controller.</p><h3 id="we-re-done-right">We're done, right?</h3><p>Not quite. We've created a data fetching and parsing class but it also happens to know a great deal about how it's going to be used. While this is fine for this specific use case, let's imagine what we might do if, for example, we needed to use a different <code>URLSession</code> that's configured differently or maybe we're using the class to prefetch data and we don't need the results on the main queue.</p><p>We've very tightly coupled these details with the <code>APIAdapter</code> class. One way to solve this is via <a href="https://en.wikipedia.org/wiki/Dependency_injection">Dependency Injection</a>. We can supply the class with the right <code>URLSession</code> or <code>DispatchQueue</code> instead of having them be created within the class. This allows us to configure the behavior of the adapter.</p><!--kg-card-begin: markdown--><pre><code class="language-swift">final class APIAdapter {
+  private let session: URLSession
+  private let queue: DispatchQueue
+
+  init(session: URLSession, queue: DispatchQueue) {
+    self.session = session
+    self.queue = queue
+  }
+
+  ...
+}
+</code></pre>
+<!--kg-card-end: markdown--><p></p><p>How we would modify the <code>fetchJobPositions(completion:)</code> method is left as an exercise for you. With this change, the <code>APIAdapter</code> is a lot more configurable with quite minimal effort.</p><p>There's one more thing we can do, applying the <a href="https://en.wikipedia.org/wiki/Convention_over_configuration">convention over configuration principle </a>from Rails. We can make the class slightly easier to consume for the typical case by providing default values:</p><!--kg-card-begin: markdown--><pre><code class="language-swift">final class APIAdapter {
+
+  init(session: URLSession = .shared, queue: DispatchQueue = .main) {
+    ...
+  }
+
+  ...
+}
+</code></pre>
+<!--kg-card-end: markdown--><p></p><p>Hopefully you've found this useful! Next time, we'll chat about how we can further reduce the responsibility overload on the view controller. You can find the final source code on Github <a href="https://github.com/matthewcheok/UndirectionalSample/tree/2-api-adapter">here</a>.</p><h3 id="take-aways">Take-aways</h3><ol><li>Establish the purpose of the type that's being refactored</li><li>Pick a name that communicates the extent of its responsibilities</li><li>Use initializer injection to allow configuration</li></ol>
+                </div>
+            </section>
+
+
+            <footer class="post-full-footer">
+
+
+                    
+<section class="author-card">
+        <img class="author-profile-image" src="/../content/images/size/w100/2019/04/46125877_10158067559242907_4450943487235325952_n.jpg" alt="Matthew Cheok">
+    <section class="author-card-content">
+        <h4 class="author-card-name"><a href="/../author/matthew/">Matthew Cheok</a></h4>
+            <p>Read <a href="/../author/matthew/">more posts</a> by this author.</p>
+    </section>
+</section>
+<div class="post-full-footer-right">
+    <a class="author-card-button" href="/../author/matthew/">Read More</a>
+</div>
+
+
+            </footer>
+
+
+        </article>
+
+    </div>
+</main>
+
+<aside class="read-next outer">
+    <div class="inner">
+        <div class="read-next-feed">
+                <article class="read-next-card" style="background-image: url(https://static.ghost.org/v1.0.0/images/blog-cover.jpg)">
+                    <header class="read-next-card-header">
+                        <small class="read-next-card-header-sitetitle">&mdash; Blog &mdash;</small>
+                        <h3 class="read-next-card-header-title"><a href="/../tag/unidirectional/">unidirectional</a></h3>
+                    </header>
+                    <div class="read-next-divider"><svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24"><path d="M13 14.5s2 3 5 3 5.5-2.463 5.5-5.5S21 6.5 18 6.5c-5 0-7 11-12 11C2.962 17.5.5 15.037.5 12S3 6.5 6 6.5s4.5 3.5 4.5 3.5"/></svg>
+</div>
+                    <div class="read-next-card-content">
+                        <ul>
+                            <li><a href="/../unidirectional-4/">The need for a store</a></li>
+                            <li><a href="/../unidirectional-3/">Introducing the worker</a></li>
+                            <li><a href="/../unidirectional-1/">Yet another application architecture?</a></li>
+                        </ul>
+                    </div>
+                    <footer class="read-next-card-footer">
+                        <a href="/../tag/unidirectional/">See all 3 posts →</a>
+                    </footer>
+                </article>
+
+                <article class="post-card post tag-unidirectional ">
+
+    <a class="post-card-image-link" href="/../unidirectional-3/">
+        <img class="post-card-image" srcset="https://images.unsplash.com/photo-1516216628859-9bccecab13ca?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1080&fit=max&ixid=eyJhcHBfaWQiOjExNzczfQ 300w, https://images.unsplash.com/photo-1516216628859-9bccecab13ca?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1080&fit=max&ixid=eyJhcHBfaWQiOjExNzczfQ 600w, https://images.unsplash.com/photo-1516216628859-9bccecab13ca?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1080&fit=max&ixid=eyJhcHBfaWQiOjExNzczfQ 1000w, https://images.unsplash.com/photo-1516216628859-9bccecab13ca?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1080&fit=max&ixid=eyJhcHBfaWQiOjExNzczfQ 2000w" sizes="(max-width: 1000px) 400px, 700px" src="/https://images.unsplash.com/photo-1516216628859-9bccecab13ca?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1080&fit=max&ixid=eyJhcHBfaWQiOjExNzczfQ" alt="Introducing the worker">
+    </a>
+
+    <div class="post-card-content">
+
+        <a class="post-card-content-link" href="/../unidirectional-3/">
+
+            <header class="post-card-header">
+                    <span class="post-card-tags">unidirectional</span>
+                <h2 class="post-card-title">Introducing the worker</h2>
+            </header>
+
+            <section class="post-card-excerpt">
+                <p>Now that we're familiar with some refactoring. Let's consider how we can pull business logic out of our view controller.</p>
+            </section>
+
+        </a>
+
+        <footer class="post-card-meta">
+
+            <ul class="author-list">
+                <li class="author-list-item">
+
+                    <div class="author-name-tooltip">
+                        Matthew Cheok
+                    </div>
+
+                        <a href="/../author/matthew/" class="static-avatar">
+                            <img class="author-profile-image" src="/../content/images/size/w100/2019/04/46125877_10158067559242907_4450943487235325952_n.jpg" alt="Matthew Cheok">
+                        </a>
+                </li>
+            </ul>
+
+            <span class="reading-time">4 min read</span>
+
+        </footer>
+
+    </div>
+
+</article>
+
+                <article class="post-card post tag-unidirectional ">
+
+    <a class="post-card-image-link" href="/../unidirectional-1/">
+        <img class="post-card-image" srcset="https://images.unsplash.com/photo-1535598745644-bc7913bb1a2a?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1080&fit=max&ixid=eyJhcHBfaWQiOjExNzczfQ 300w, https://images.unsplash.com/photo-1535598745644-bc7913bb1a2a?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1080&fit=max&ixid=eyJhcHBfaWQiOjExNzczfQ 600w, https://images.unsplash.com/photo-1535598745644-bc7913bb1a2a?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1080&fit=max&ixid=eyJhcHBfaWQiOjExNzczfQ 1000w, https://images.unsplash.com/photo-1535598745644-bc7913bb1a2a?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1080&fit=max&ixid=eyJhcHBfaWQiOjExNzczfQ 2000w" sizes="(max-width: 1000px) 400px, 700px" src="/https://images.unsplash.com/photo-1535598745644-bc7913bb1a2a?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1080&fit=max&ixid=eyJhcHBfaWQiOjExNzczfQ" alt="Yet another application architecture?">
+    </a>
+
+    <div class="post-card-content">
+
+        <a class="post-card-content-link" href="/../unidirectional-1/">
+
+            <header class="post-card-header">
+                    <span class="post-card-tags">unidirectional</span>
+                <h2 class="post-card-title">Yet another application architecture?</h2>
+            </header>
+
+            <section class="post-card-excerpt">
+                <p>An introduction to a series of posts discussing one way to structure an iOS application. We'll attempt to refactor a real application and see what organically evolves.</p>
+            </section>
+
+        </a>
+
+        <footer class="post-card-meta">
+
+            <ul class="author-list">
+                <li class="author-list-item">
+
+                    <div class="author-name-tooltip">
+                        Matthew Cheok
+                    </div>
+
+                        <a href="/../author/matthew/" class="static-avatar">
+                            <img class="author-profile-image" src="/../content/images/size/w100/2019/04/46125877_10158067559242907_4450943487235325952_n.jpg" alt="Matthew Cheok">
+                        </a>
+                </li>
+            </ul>
+
+            <span class="reading-time">2 min read</span>
+
+        </footer>
+
+    </div>
+
+</article>
+
+        </div>
+    </div>
+</aside>
+
+<div class="floating-header">
+    <div class="floating-header-logo">
+        <a href="/../">
+            <span>Blog</span>
+        </a>
+    </div>
+    <span class="floating-header-divider">&mdash;</span>
+    <div class="floating-header-title">Extracting dependencies</div>
+    <div class="floating-header-share">
+        <div class="floating-header-share-label">Share this <svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24">
+    <path d="M7.5 15.5V4a1.5 1.5 0 1 1 3 0v4.5h2a1 1 0 0 1 1 1h2a1 1 0 0 1 1 1H18a1.5 1.5 0 0 1 1.5 1.5v3.099c0 .929-.13 1.854-.385 2.748L17.5 23.5h-9c-1.5-2-5.417-8.673-5.417-8.673a1.2 1.2 0 0 1 1.76-1.605L7.5 15.5zm6-6v2m-3-3.5v3.5m6-1v2"/>
+</svg>
+</div>
+        <a class="floating-header-share-tw" href="https://twitter.com/share?text=Extracting%20dependencies&url=https://matthewcheok.github.io/unidirectional-2/" onclick="window.open(this.href, 'share-twitter', 'width=550,height=235');return false;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 32 32"><path d="M30.063 7.313c-.813 1.125-1.75 2.125-2.875 2.938v.75c0 1.563-.188 3.125-.688 4.625a15.088 15.088 0 0 1-2.063 4.438c-.875 1.438-2 2.688-3.25 3.813a15.015 15.015 0 0 1-4.625 2.563c-1.813.688-3.75 1-5.75 1-3.25 0-6.188-.875-8.875-2.625.438.063.875.125 1.375.125 2.688 0 5.063-.875 7.188-2.5-1.25 0-2.375-.375-3.375-1.125s-1.688-1.688-2.063-2.875c.438.063.813.125 1.125.125.5 0 1-.063 1.5-.25-1.313-.25-2.438-.938-3.313-1.938a5.673 5.673 0 0 1-1.313-3.688v-.063c.813.438 1.688.688 2.625.688a5.228 5.228 0 0 1-1.875-2c-.5-.875-.688-1.813-.688-2.75 0-1.063.25-2.063.75-2.938 1.438 1.75 3.188 3.188 5.25 4.25s4.313 1.688 6.688 1.813a5.579 5.579 0 0 1 1.5-5.438c1.125-1.125 2.5-1.688 4.125-1.688s3.063.625 4.188 1.813a11.48 11.48 0 0 0 3.688-1.375c-.438 1.375-1.313 2.438-2.563 3.188 1.125-.125 2.188-.438 3.313-.875z"/></svg>
+        </a>
+        <a class="floating-header-share-fb" href="https://www.facebook.com/sharer/sharer.php?u=https://matthewcheok.github.io/unidirectional-2/" onclick="window.open(this.href, 'share-facebook','width=580,height=296');return false;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 32 32"><path d="M19 6h5V0h-5c-3.86 0-7 3.14-7 7v3H8v6h4v16h6V16h5l1-6h-6V7c0-.542.458-1 1-1z"/></svg>
+        </a>
+    </div>
+    <progress id="reading-progress" class="progress" value="0">
+        <div class="progress-container">
+            <span class="progress-bar"></span>
+        </div>
+    </progress>
+</div>
+
+
+
+
+        <footer class="site-footer outer">
+            <div class="site-footer-content inner">
+                <section class="copyright"><a href="/../">Blog</a> &copy; 2019</section>
+                <nav class="site-footer-nav">
+                    <a href="/../">Latest Posts</a>
+                    
+                    
+                    <a href="https://ghost.org" target="_blank" rel="noopener">Ghost</a>
+                </nav>
+            </div>
+        </footer>
+
+    </div>
+
+
+    <script>
+        var images = document.querySelectorAll('.kg-gallery-image img');
+        images.forEach(function (image) {
+            var container = image.closest('.kg-gallery-image');
+            var width = image.attributes.width.value;
+            var height = image.attributes.height.value;
+            var ratio = width / height;
+            container.style.flex = ratio + ' 1 0%';
+        })
+    </script>
+
+
+    <script src="/https://code.jquery.com/jquery-3.2.1.min.js" crossorigin="anonymous">
+    </script>
+    <script type="text/javascript" src="/../assets/built/jquery.fitvids.js"></script>
+
+
+    <script>
+
+// NOTE: Scroll performance is poor in Safari
+// - this appears to be due to the events firing much more slowly in Safari.
+//   Dropping the scroll event and using only a raf loop results in smoother
+//   scrolling but continuous processing even when not scrolling
+$(document).ready(function () {
+    // Start fitVids
+    var $postContent = $(".post-full-content");
+    $postContent.fitVids();
+    // End fitVids
+
+    var progressBar = document.querySelector('#reading-progress');
+    var header = document.querySelector('.floating-header');
+    var title = document.querySelector('.post-full-title');
+
+    var lastScrollY = window.scrollY;
+    var lastWindowHeight = window.innerHeight;
+    var lastDocumentHeight = $(document).height();
+    var ticking = false;
+
+    function onScroll() {
+        lastScrollY = window.scrollY;
+        requestTick();
+    }
+
+    function onResize() {
+        lastWindowHeight = window.innerHeight;
+        lastDocumentHeight = $(document).height();
+        requestTick();
+    }
+
+    function requestTick() {
+        if (!ticking) {
+            requestAnimationFrame(update);
+        }
+        ticking = true;
+    }
+
+    function update() {
+        var trigger = title.getBoundingClientRect().top + window.scrollY;
+        var triggerOffset = title.offsetHeight + 35;
+        var progressMax = lastDocumentHeight - lastWindowHeight;
+
+        // show/hide floating header
+        if (lastScrollY >= trigger + triggerOffset) {
+            header.classList.add('floating-active');
+        } else {
+            header.classList.remove('floating-active');
+        }
+
+        progressBar.setAttribute('max', progressMax);
+        progressBar.setAttribute('value', lastScrollY);
+
+        ticking = false;
+    }
+
+    window.addEventListener('scroll', onScroll, {passive: true});
+    window.addEventListener('resize', onResize, false);
+
+    update();
+
+});
+</script>
+
+
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/prism/1.13.0/prism.min.js"></script> 
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/prism/1.13.0/components/prism-swift.min.js"></script>
+
+</body>
+</html>

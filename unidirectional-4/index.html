@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <title>The need for a store</title>
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" type="text/css" href="/../assets/built/screen.css">
+
+    <link rel="shortcut icon" href="/../favicon.ico" type="image/x-icon">
+    <link rel="canonical" href="https://matthewcheok.github.io/unidirectional-4/">
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    <link rel="amphtml" href="https://matthewcheok.github.io/unidirectional-4/amp/">
+    
+    <meta property="og:site_name" content="Blog">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="The need for a store">
+    <meta property="og:description" content="Previously, we talked about the worker, an entity for managing business logic. In this post, we&#x27;ll delve into managing state and how we can make that more explicit.">
+    <meta property="og:url" content="https://matthewcheok.github.io/unidirectional-4/">
+    <meta property="og:image" content="https://images.unsplash.com/photo-1514792368985-f80e9d482a02?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1080&fit=max&ixid=eyJhcHBfaWQiOjExNzczfQ">
+    <meta property="article:published_time" content="2019-04-05T15:17:49.000Z">
+    <meta property="article:modified_time" content="2019-04-06T15:52:01.000Z">
+    <meta property="article:tag" content="unidirectional">
+    
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="The need for a store">
+    <meta name="twitter:description" content="Previously, we talked about the worker, an entity for managing business logic. In this post, we&#x27;ll delve into managing state and how we can make that more explicit.">
+    <meta name="twitter:url" content="https://matthewcheok.github.io/unidirectional-4/">
+    <meta name="twitter:image" content="https://images.unsplash.com/photo-1514792368985-f80e9d482a02?ixlib&#x3D;rb-1.2.1&amp;q&#x3D;80&amp;fm&#x3D;jpg&amp;crop&#x3D;entropy&amp;cs&#x3D;tinysrgb&amp;w&#x3D;1080&amp;fit&#x3D;max&amp;ixid&#x3D;eyJhcHBfaWQiOjExNzczfQ">
+    <meta name="twitter:label1" content="Written by">
+    <meta name="twitter:data1" content="Matthew Cheok">
+    <meta name="twitter:label2" content="Filed under">
+    <meta name="twitter:data2" content="unidirectional">
+    <meta name="twitter:creator" content="@matthewcheok">
+    
+    <script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "publisher": {
+        "@type": "Organization",
+        "name": "Blog",
+        "logo": {
+            "@type": "ImageObject",
+            "url": "https://matthewcheok.github.io/favicon.ico",
+            "width": 60,
+            "height": 60
+        }
+    },
+    "author": {
+        "@type": "Person",
+        "name": "Matthew Cheok",
+        "image": {
+            "@type": "ImageObject",
+            "url": "https://matthewcheok.github.io/content/images/2019/04/46125877_10158067559242907_4450943487235325952_n.jpg",
+            "width": 960,
+            "height": 960
+        },
+        "url": "https://matthewcheok.github.io/author/matthew/",
+        "sameAs": [
+            "https://twitter.com/matthewcheok"
+        ]
+    },
+    "headline": "The need for a store",
+    "url": "https://matthewcheok.github.io/unidirectional-4/",
+    "datePublished": "2019-04-05T15:17:49.000Z",
+    "dateModified": "2019-04-06T15:52:01.000Z",
+    "image": "https://images.unsplash.com/photo-1514792368985-f80e9d482a02?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1080&fit=max&ixid=eyJhcHBfaWQiOjExNzczfQ",
+    "keywords": "unidirectional",
+    "description": "Previously, we talked about the worker, an entity for managing business logic. In this post, we&#x27;ll delve into managing state and how we can make that more explicit.",
+    "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": "https://matthewcheok.github.io/"
+    }
+}
+    </script>
+
+    <meta name="generator" content="Ghost 2.19">
+    <link rel="alternate" type="application/rss+xml" title="Blog" href="https://matthewcheok.github.io/rss/">
+    <link href="//cdnjs.cloudflare.com/ajax/libs/prism/1.13.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="/https://www.googletagmanager.com/gtag/js?id=UA-137782159-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-137782159-1');
+</script>
+
+</head>
+<body class="post-template tag-unidirectional">
+
+    <div class="site-wrapper">
+
+        
+
+<header class="site-header outer">
+    <div class="inner">
+        <nav class="site-nav">
+    <div class="site-nav-left">
+                <a class="site-nav-logo" href="/../">Blog</a>
+            <ul class="nav" role="menu">
+    <li class="nav-home" role="menuitem"><a href="https://matthewcheok.github.io">Home</a></li>
+    <li class="nav-github" role="menuitem"><a href="https://www.github.com/matthewcheok">Github</a></li>
+    <li class="nav-twitter" role="menuitem"><a href="https://twitter.com/matthewcheok">Twitter</a></li>
+</ul>
+
+    </div>
+    <div class="site-nav-right">
+        <div class="social-links">
+        </div>
+            <a class="rss-button" href="https://feedly.com/i/subscription/feed/https://matthewcheok.github.io/rss/" title="RSS" target="_blank" rel="noopener"><svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24"><circle cx="6.18" cy="17.82" r="2.18"/><path d="M4 4.44v2.83c7.03 0 12.73 5.7 12.73 12.73h2.83c0-8.59-6.97-15.56-15.56-15.56zm0 5.66v2.83c3.9 0 7.07 3.17 7.07 7.07h2.83c0-5.47-4.43-9.9-9.9-9.9z"/></svg>
+</a>
+    </div>
+</nav>
+    </div>
+</header>
+
+
+<main id="site-main" class="site-main outer">
+    <div class="inner">
+
+        <article class="post-full post tag-unidirectional ">
+
+            <header class="post-full-header">
+                <section class="post-full-meta">
+                    <time class="post-full-meta-date" datetime="2019-04-05">5 April 2019</time>
+                        <span class="date-divider">/</span> <a href="/../tag/unidirectional/">unidirectional</a>
+                </section>
+                <h1 class="post-full-title">The need for a store</h1>
+            </header>
+
+            <figure class="post-full-image">
+                <img srcset="https://images.unsplash.com/photo-1514792368985-f80e9d482a02?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1080&fit=max&ixid=eyJhcHBfaWQiOjExNzczfQ 300w, https://images.unsplash.com/photo-1514792368985-f80e9d482a02?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1080&fit=max&ixid=eyJhcHBfaWQiOjExNzczfQ 600w, https://images.unsplash.com/photo-1514792368985-f80e9d482a02?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1080&fit=max&ixid=eyJhcHBfaWQiOjExNzczfQ 1000w, https://images.unsplash.com/photo-1514792368985-f80e9d482a02?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1080&fit=max&ixid=eyJhcHBfaWQiOjExNzczfQ 2000w" sizes="(max-width: 800px) 400px,
+                            (max-width: 1170px) 700px,
+                            1400px" src="/https://images.unsplash.com/photo-1514792368985-f80e9d482a02?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1080&fit=max&ixid=eyJhcHBfaWQiOjExNzczfQ" alt="The need for a store">
+            </figure>
+
+            <section class="post-full-content">
+                <div class="post-content">
+                    <p>Let's take a look at where things <a href="https://github.com/matthewcheok/UndirectionalSample/tree/3-worker/UndirectionalSample">stand</a> at the end of the last post:</p><!--kg-card-begin: image--><figure class="kg-card kg-image-card kg-width-full"><img src="/../content/images/2019/04/Screen-Shot-2019-04-04-at-11.30.57-PM.png" class="kg-image"></figure><!--kg-card-end: image--><p>We've introduced the concept of a worker, an entity for handling business logic. It communicates with the view passing it state (which is a transient representation of the data in the app.) The view then forwards user interactions back to the worker to be handled.</p><p>On the surface, this seems fine but what's the worker's purpose again? To handle business logic. In this world, however, it's also mutating state and managing state. To solve this, we could introduce a store, an entity for doing just that.</p><h3 id="building-a-store">Building a store</h3><!--kg-card-begin: markdown--><pre><code class="language-swift">protocol ListStateRendering: AnyObject {
+  func setState(_ state: ListState)
+}
+
+final class ListStore {
+  weak var renderer: ListStateRendering?
+
+  var state = ListState.initial {
+    didSet {
+      renderer?.setState(state)
+    }
+  }
+
+  init(renderer: ListStateRendering) {
+    self.renderer = renderer
+    renderer.setState(state)
+  }
+}
+
+extension ListState {
+  static var initial: ListState {
+    return .init(title: &quot;SF Job Positions&quot;, items: [])
+  }
+}
+</code></pre>
+<!--kg-card-end: markdown--><p></p><p>In this case, we've simply extracted state managing logic from the the worker. To clarify the responsibilities, let's break up <code>ListStateRendering</code> into two separate protocols, one for updating the view layer when the state changes and another for effecting UI-level changes (like presenting and dismissing view controllers.)</p><!--kg-card-begin: markdown--><pre><code class="language-swift">protocol ListViewActing: AnyObject {
+  func presentDetailViewController(_ viewController: UIViewController)
+}
+
+final class ListWorker {
+  weak var actor: ListViewActing?
+
+  let store: ListStore
+
+  init(store: ListStore, actor: ListViewActing) {
+    self.store = store
+    self.actor = actor
+  }
+
+  ...
+
+  func reloadData() {
+    apiAdapter.fetchJobPositions { (result) in
+      switch result {
+      case .success(let items):
+        self.store.state.items = items
+
+      ...
+    }
+  }
+
+  func didSelectRow(at index: Int) {
+    ...
+    actor?.presentDetailViewController(viewController)
+  }
+}
+
+</code></pre>
+<!--kg-card-end: markdown--><p></p><p>This is looking pretty clean. Now that we've split what used to be the worker into separate entities, let's wire them up in our view controller:</p><!--kg-card-begin: markdown--><pre><code class="language-swift">class ListViewController: UIViewController {
+  ...
+
+  private lazy var store = ListStore(renderer: self)
+  private lazy var worker = ListWorker(store: store, actor: self)
+}
+
+extension ListViewController: ListViewActing {
+  ...
+}
+</code></pre>
+<!--kg-card-end: markdown--><p></p><h3 id="what-s-a-state-machine">What's a state machine?</h3><p>If we imagine our feature as the transitions between a finite number of potential possible states (which is <a href="https://en.wikipedia.org/wiki/Product_type">combinatorial</a> with the number of properties in the state type) and the transitions themselves representing a limited number of possible user interactions, then what are we building is basically a <a href="https://brilliant.org/wiki/finite-state-machines/">finite state machine</a>.</p><p>Each user action should only cause our state to change in a very strict and specific way. Therefore, we can define this finite set of actions and our state can process its mutations internally, allowing us to decouple the knowledge of state mutations from our worker. We can use associated types in Swift's enums to encode relevant information with each mutation:</p><!--kg-card-begin: markdown--><pre><code class="language-swift">extension ListState {
+  enum Mutation {
+    case loaded(items: [JobPosition])
+    case clear
+  }
+
+  mutating func apply(_ mutation: Mutation) {
+    switch mutation {
+    case .loaded(items: let items):
+      self.items = items
+    case .clear:
+      self.items = []
+    }
+  }
+}
+
+final class ListStore {
+  ...
+  private(set) var state = ...
+  
+  func handle(_ mutation: ListState.Mutation) {
+    state.apply(mutation)
+  }
+}
+</code></pre>
+<!--kg-card-end: markdown--><p></p><p>Next, we can update our worker to remove direct state manipulation and instead call out to one of the pre-defined state mutations:</p><!--kg-card-begin: markdown--><pre><code class="language-swift">final class ListWorker {
+  ...
+
+  func reloadData() {
+    apiAdapter.fetchJobPositions { (result) in
+      switch result {
+      case .success(let items):
+        self.store.handle(.loaded(items: items))
+
+      ...
+      }
+    }
+  }
+}
+</code></pre>
+<!--kg-card-end: markdown--><p></p><p>This simple change makes it very clear the intent of a user interaction or view action. In this instance, the <code>viewDidLoad(animated:)</code> lifecycle hook calls into the worker's <code>reloadData()</code> which then fires a network request, which when completed, updates the state via the <code>.loaded(items:)</code> mutation.</p><p>If you'd like to see what this look like in code, click <a href="https://github.com/matthewcheok/UndirectionalSample/tree/4-store/UndirectionalSample">here</a>.</p><p></p><h3 id="take-aways">Take-aways</h3><ol><li>Use a store to decouple state management from the worker</li><li>Define exhaustively the ways your state should change with user interaction</li><li>Encapsulate direct state mutations within the state type to decouple business logic from a specific implementation of state</li></ol>
+                </div>
+            </section>
+
+
+            <footer class="post-full-footer">
+
+
+                    
+<section class="author-card">
+        <img class="author-profile-image" src="/../content/images/size/w100/2019/04/46125877_10158067559242907_4450943487235325952_n.jpg" alt="Matthew Cheok">
+    <section class="author-card-content">
+        <h4 class="author-card-name"><a href="/../author/matthew/">Matthew Cheok</a></h4>
+            <p>Read <a href="/../author/matthew/">more posts</a> by this author.</p>
+    </section>
+</section>
+<div class="post-full-footer-right">
+    <a class="author-card-button" href="/../author/matthew/">Read More</a>
+</div>
+
+
+            </footer>
+
+
+        </article>
+
+    </div>
+</main>
+
+<aside class="read-next outer">
+    <div class="inner">
+        <div class="read-next-feed">
+                <article class="read-next-card" style="background-image: url(https://static.ghost.org/v1.0.0/images/blog-cover.jpg)">
+                    <header class="read-next-card-header">
+                        <small class="read-next-card-header-sitetitle">&mdash; Blog &mdash;</small>
+                        <h3 class="read-next-card-header-title"><a href="/../tag/unidirectional/">unidirectional</a></h3>
+                    </header>
+                    <div class="read-next-divider"><svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24"><path d="M13 14.5s2 3 5 3 5.5-2.463 5.5-5.5S21 6.5 18 6.5c-5 0-7 11-12 11C2.962 17.5.5 15.037.5 12S3 6.5 6 6.5s4.5 3.5 4.5 3.5"/></svg>
+</div>
+                    <div class="read-next-card-content">
+                        <ul>
+                            <li><a href="/../unidirectional-3/">Introducing the worker</a></li>
+                            <li><a href="/../unidirectional-2/">Extracting dependencies</a></li>
+                            <li><a href="/../unidirectional-1/">Yet another application architecture?</a></li>
+                        </ul>
+                    </div>
+                    <footer class="read-next-card-footer">
+                        <a href="/../tag/unidirectional/">See all 3 posts →</a>
+                    </footer>
+                </article>
+
+
+                <article class="post-card post tag-unidirectional ">
+
+    <a class="post-card-image-link" href="/../unidirectional-3/">
+        <img class="post-card-image" srcset="https://images.unsplash.com/photo-1516216628859-9bccecab13ca?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1080&fit=max&ixid=eyJhcHBfaWQiOjExNzczfQ 300w, https://images.unsplash.com/photo-1516216628859-9bccecab13ca?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1080&fit=max&ixid=eyJhcHBfaWQiOjExNzczfQ 600w, https://images.unsplash.com/photo-1516216628859-9bccecab13ca?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1080&fit=max&ixid=eyJhcHBfaWQiOjExNzczfQ 1000w, https://images.unsplash.com/photo-1516216628859-9bccecab13ca?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1080&fit=max&ixid=eyJhcHBfaWQiOjExNzczfQ 2000w" sizes="(max-width: 1000px) 400px, 700px" src="/https://images.unsplash.com/photo-1516216628859-9bccecab13ca?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1080&fit=max&ixid=eyJhcHBfaWQiOjExNzczfQ" alt="Introducing the worker">
+    </a>
+
+    <div class="post-card-content">
+
+        <a class="post-card-content-link" href="/../unidirectional-3/">
+
+            <header class="post-card-header">
+                    <span class="post-card-tags">unidirectional</span>
+                <h2 class="post-card-title">Introducing the worker</h2>
+            </header>
+
+            <section class="post-card-excerpt">
+                <p>Now that we're familiar with some refactoring. Let's consider how we can pull business logic out of our view controller.</p>
+            </section>
+
+        </a>
+
+        <footer class="post-card-meta">
+
+            <ul class="author-list">
+                <li class="author-list-item">
+
+                    <div class="author-name-tooltip">
+                        Matthew Cheok
+                    </div>
+
+                        <a href="/../author/matthew/" class="static-avatar">
+                            <img class="author-profile-image" src="/../content/images/size/w100/2019/04/46125877_10158067559242907_4450943487235325952_n.jpg" alt="Matthew Cheok">
+                        </a>
+                </li>
+            </ul>
+
+            <span class="reading-time">4 min read</span>
+
+        </footer>
+
+    </div>
+
+</article>
+
+        </div>
+    </div>
+</aside>
+
+<div class="floating-header">
+    <div class="floating-header-logo">
+        <a href="/../">
+            <span>Blog</span>
+        </a>
+    </div>
+    <span class="floating-header-divider">&mdash;</span>
+    <div class="floating-header-title">The need for a store</div>
+    <div class="floating-header-share">
+        <div class="floating-header-share-label">Share this <svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24">
+    <path d="M7.5 15.5V4a1.5 1.5 0 1 1 3 0v4.5h2a1 1 0 0 1 1 1h2a1 1 0 0 1 1 1H18a1.5 1.5 0 0 1 1.5 1.5v3.099c0 .929-.13 1.854-.385 2.748L17.5 23.5h-9c-1.5-2-5.417-8.673-5.417-8.673a1.2 1.2 0 0 1 1.76-1.605L7.5 15.5zm6-6v2m-3-3.5v3.5m6-1v2"/>
+</svg>
+</div>
+        <a class="floating-header-share-tw" href="https://twitter.com/share?text=The%20need%20for%20a%20store&url=https://matthewcheok.github.io/unidirectional-4/" onclick="window.open(this.href, 'share-twitter', 'width=550,height=235');return false;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 32 32"><path d="M30.063 7.313c-.813 1.125-1.75 2.125-2.875 2.938v.75c0 1.563-.188 3.125-.688 4.625a15.088 15.088 0 0 1-2.063 4.438c-.875 1.438-2 2.688-3.25 3.813a15.015 15.015 0 0 1-4.625 2.563c-1.813.688-3.75 1-5.75 1-3.25 0-6.188-.875-8.875-2.625.438.063.875.125 1.375.125 2.688 0 5.063-.875 7.188-2.5-1.25 0-2.375-.375-3.375-1.125s-1.688-1.688-2.063-2.875c.438.063.813.125 1.125.125.5 0 1-.063 1.5-.25-1.313-.25-2.438-.938-3.313-1.938a5.673 5.673 0 0 1-1.313-3.688v-.063c.813.438 1.688.688 2.625.688a5.228 5.228 0 0 1-1.875-2c-.5-.875-.688-1.813-.688-2.75 0-1.063.25-2.063.75-2.938 1.438 1.75 3.188 3.188 5.25 4.25s4.313 1.688 6.688 1.813a5.579 5.579 0 0 1 1.5-5.438c1.125-1.125 2.5-1.688 4.125-1.688s3.063.625 4.188 1.813a11.48 11.48 0 0 0 3.688-1.375c-.438 1.375-1.313 2.438-2.563 3.188 1.125-.125 2.188-.438 3.313-.875z"/></svg>
+        </a>
+        <a class="floating-header-share-fb" href="https://www.facebook.com/sharer/sharer.php?u=https://matthewcheok.github.io/unidirectional-4/" onclick="window.open(this.href, 'share-facebook','width=580,height=296');return false;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 32 32"><path d="M19 6h5V0h-5c-3.86 0-7 3.14-7 7v3H8v6h4v16h6V16h5l1-6h-6V7c0-.542.458-1 1-1z"/></svg>
+        </a>
+    </div>
+    <progress id="reading-progress" class="progress" value="0">
+        <div class="progress-container">
+            <span class="progress-bar"></span>
+        </div>
+    </progress>
+</div>
+
+
+
+
+        <footer class="site-footer outer">
+            <div class="site-footer-content inner">
+                <section class="copyright"><a href="/../">Blog</a> &copy; 2019</section>
+                <nav class="site-footer-nav">
+                    <a href="/../">Latest Posts</a>
+                    
+                    
+                    <a href="https://ghost.org" target="_blank" rel="noopener">Ghost</a>
+                </nav>
+            </div>
+        </footer>
+
+    </div>
+
+
+    <script>
+        var images = document.querySelectorAll('.kg-gallery-image img');
+        images.forEach(function (image) {
+            var container = image.closest('.kg-gallery-image');
+            var width = image.attributes.width.value;
+            var height = image.attributes.height.value;
+            var ratio = width / height;
+            container.style.flex = ratio + ' 1 0%';
+        })
+    </script>
+
+
+    <script src="/https://code.jquery.com/jquery-3.2.1.min.js" crossorigin="anonymous">
+    </script>
+    <script type="text/javascript" src="/../assets/built/jquery.fitvids.js"></script>
+
+
+    <script>
+
+// NOTE: Scroll performance is poor in Safari
+// - this appears to be due to the events firing much more slowly in Safari.
+//   Dropping the scroll event and using only a raf loop results in smoother
+//   scrolling but continuous processing even when not scrolling
+$(document).ready(function () {
+    // Start fitVids
+    var $postContent = $(".post-full-content");
+    $postContent.fitVids();
+    // End fitVids
+
+    var progressBar = document.querySelector('#reading-progress');
+    var header = document.querySelector('.floating-header');
+    var title = document.querySelector('.post-full-title');
+
+    var lastScrollY = window.scrollY;
+    var lastWindowHeight = window.innerHeight;
+    var lastDocumentHeight = $(document).height();
+    var ticking = false;
+
+    function onScroll() {
+        lastScrollY = window.scrollY;
+        requestTick();
+    }
+
+    function onResize() {
+        lastWindowHeight = window.innerHeight;
+        lastDocumentHeight = $(document).height();
+        requestTick();
+    }
+
+    function requestTick() {
+        if (!ticking) {
+            requestAnimationFrame(update);
+        }
+        ticking = true;
+    }
+
+    function update() {
+        var trigger = title.getBoundingClientRect().top + window.scrollY;
+        var triggerOffset = title.offsetHeight + 35;
+        var progressMax = lastDocumentHeight - lastWindowHeight;
+
+        // show/hide floating header
+        if (lastScrollY >= trigger + triggerOffset) {
+            header.classList.add('floating-active');
+        } else {
+            header.classList.remove('floating-active');
+        }
+
+        progressBar.setAttribute('max', progressMax);
+        progressBar.setAttribute('value', lastScrollY);
+
+        ticking = false;
+    }
+
+    window.addEventListener('scroll', onScroll, {passive: true});
+    window.addEventListener('resize', onResize, false);
+
+    update();
+
+});
+</script>
+
+
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/prism/1.13.0/prism.min.js"></script> 
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/prism/1.13.0/components/prism-swift.min.js"></script>
+
+</body>
+</html>
